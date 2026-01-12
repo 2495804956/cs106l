@@ -29,6 +29,26 @@ std::string kYourName = "STUDENT TODO"; // Don't forget to change this!
  */
 std::set<std::string> get_applicants(std::string filename) {
   // STUDENT TODO: Implement this function.
+  std::ifstream ifs(filename);
+  std::set<std::string> applicants;
+
+  if(!ifs.is_open()){
+    return applicants;
+  }
+
+  std::string line;
+  std::string whitespace = "\r\t\n";
+  while(std::getline(ifs,line)){
+    auto start = line.find_first_not_of(whitespace);
+    if(start == std::string::npos){
+      continue;  // empty or whitespace
+    }
+    auto end = line.find_last_not_of(whitespace);
+    std::string name = line.substr(start,end-start+1);
+    if(!name.empty()){
+      applicants.insert(name);
+    }  
+  }
 }
 
 /**
@@ -41,6 +61,28 @@ std::set<std::string> get_applicants(std::string filename) {
  */
 std::queue<const std::string*> find_matches(std::string name, std::set<std::string>& students) {
   // STUDENT TODO: Implement this function.
+  std::queue<const std::string*> matches;
+
+  auto get_initials = [](const std::string& name){
+    std::istringstream iss(name);
+    std::string initials;
+    std:: string word;
+    while(iss >> word){
+      if(!word.empty()){
+        initials += word[0]; 
+      }
+    }
+    return initials;
+  };
+
+  std::string target = get_initials(name);
+  for(const auto& student : students){
+    if(get_initials(student) == target){
+      matches.push(&student);
+    }
+  }
+
+  return matches;
 }
 
 /**
@@ -55,7 +97,31 @@ std::queue<const std::string*> find_matches(std::string name, std::set<std::stri
  */
 std::string get_match(std::queue<const std::string*>& matches) {
   // STUDENT TODO: Implement this function.
+  if (matches.empty()) return "NO MATCHES FOUND.";
+
+  // Choose the shortest name (fewest characters). Tie-breaker: lexicographical order.
+  const std::string* best = nullptr;
+  std::vector<const std::string*> items;
+  while (!matches.empty()) {
+    items.push_back(matches.front());
+    matches.pop();
+  }
+
+  for (const std::string* p : items) {
+    if (p == nullptr) continue;
+    if (best == nullptr) {
+      best = p;
+      continue;
+    }
+    if (p->size() < best->size()) best = p;
+    else if (p->size() == best->size() && *p < *best) best = p;
+  }
+
+  if (best) return *best;
+  return "NO MATCHES FOUND.";
+  
 }
+
 
 /* #### Please don't remove this line! #### */
 #include "autograder/utils.hpp"
